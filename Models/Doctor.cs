@@ -91,7 +91,7 @@ namespace ClinicAppointmentManager.Models
 
         public override string ToString()
         {
-            return $"{Id}: Dr. {Name} ({Specialization})";
+            return $"Dr. {Name}";
         }
     }
 }

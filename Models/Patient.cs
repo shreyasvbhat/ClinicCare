@@ -24,10 +24,16 @@ namespace ClinicAppointmentManager.Models
         public string Name { get; set; }
 
         /// <summary>
-        /// Patient's email address for notifications.
+        /// Patient's age in years.
         /// </summary>
-        [BsonElement("email")]
-        public string Email { get; set; }
+        [BsonElement("age")]
+        public int Age { get; set; }
+
+        /// <summary>
+        /// Patient's gender (Male, Female, Other).
+        /// </summary>
+        [BsonElement("gender")]
+        public string Gender { get; set; }
 
         /// <summary>
         /// Patient's phone number for reminders.
@@ -36,13 +42,13 @@ namespace ClinicAppointmentManager.Models
         public string Phone { get; set; }
 
         /// <summary>
-        /// Date of birth of the patient.
+        /// Patient's email address for notifications (optional).
         /// </summary>
-        [BsonElement("dateOfBirth")]
-        public DateTime DateOfBirth { get; set; }
+        [BsonElement("email")]
+        public string Email { get; set; }
 
         /// <summary>
-        /// Medical history notes (allergies, previous conditions, etc.).
+        /// Medical history notes - allergies, previous conditions, etc. (optional).
         /// </summary>
         [BsonElement("medicalHistory")]
         public string MedicalHistory { get; set; }
@@ -65,14 +71,14 @@ namespace ClinicAppointmentManager.Models
         public bool IsValid()
         {
             return !string.IsNullOrWhiteSpace(Name) &&
-                   !string.IsNullOrWhiteSpace(Email) &&
                    !string.IsNullOrWhiteSpace(Phone) &&
-                   DateOfBirth < DateTime.Now;
+                   !string.IsNullOrWhiteSpace(Gender) &&
+                   Age > 0 && Age < 150;
         }
 
         public override string ToString()
         {
-            return $"{Id}: {Name} ({Email})";
+            return Name;
         }
     }
 }

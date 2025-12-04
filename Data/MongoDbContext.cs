@@ -35,9 +35,7 @@ namespace ClinicAppointmentManager.Data
             try
             {
                 if (string.IsNullOrWhiteSpace(MONGO_CONNECTION_STRING) ||
-                    string.IsNullOrWhiteSpace(MONGO_DB_NAME) ||
-                    MONGO_CONNECTION_STRING == "mongodb+srv://udupishreyasbhat_db_user:qQibcWmN8vLcDNEh@cluster0.muyslgj.mongodb.net/" ||
-                    MONGO_DB_NAME == "appointmentBooking")
+                    string.IsNullOrWhiteSpace(MONGO_DB_NAME))
                 {
                     throw new DatabaseException(
                         "MongoDB configuration not set. Please configure MONGO_CONNECTION_STRING and MONGO_DB_NAME in MongoDbContext.cs");

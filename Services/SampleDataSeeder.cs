@@ -73,33 +73,37 @@ namespace ClinicAppointmentManager.Services
                 new Patient
                 {
                     Name = "John Smith",
-                    Email = "john.smith@example.com",
+                    Age = 39,
+                    Gender = "Male",
                     Phone = "555-0101",
-                    DateOfBirth = new DateTime(1985, 5, 15),
+                    Email = "john.smith@example.com",
                     MedicalHistory = "Allergy to Penicillin, Hypertension"
                 },
                 new Patient
                 {
                     Name = "Sarah Johnson",
-                    Email = "sarah.johnson@example.com",
+                    Age = 35,
+                    Gender = "Female",
                     Phone = "555-0102",
-                    DateOfBirth = new DateTime(1990, 8, 22),
+                    Email = "sarah.johnson@example.com",
                     MedicalHistory = "Asthma, No known allergies"
                 },
                 new Patient
                 {
                     Name = "Michael Brown",
-                    Email = "michael.brown@example.com",
+                    Age = 47,
+                    Gender = "Male",
                     Phone = "555-0103",
-                    DateOfBirth = new DateTime(1978, 3, 10),
+                    Email = "michael.brown@example.com",
                     MedicalHistory = "Diabetes Type 2, Overweight"
                 },
                 new Patient
                 {
                     Name = "Emily Davis",
-                    Email = "emily.davis@example.com",
+                    Age = 30,
+                    Gender = "Female",
                     Phone = "555-0104",
-                    DateOfBirth = new DateTime(1995, 12, 5),
+                    Email = "emily.davis@example.com",
                     MedicalHistory = "No significant medical history"
                 }
             };
@@ -114,7 +118,7 @@ namespace ClinicAppointmentManager.Services
                 }
                 catch (DatabaseException ex)
                 {
-                    LogMessage($"⚠ Patient {patient.Email} might already exist: {ex.Message}");
+                    LogMessage($"⚠ Patient {patient.Name} might already exist: {ex.Message}");
                 }
             }
 

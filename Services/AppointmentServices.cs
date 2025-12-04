@@ -368,7 +368,9 @@ namespace ClinicAppointmentManager.Services
                 foreach (var appt in appointments)
                 {
                     var patient = await _patientRepository.GetByIdAsync(appt.PatientId);
-                    summary.AppendLine($"{appt.StartTime:HH:mm} - {appt.EndTime:HH:mm}: {patient?.Name ?? "Unknown"} ({appt.Reason})");
+                    var startLocal = appt.StartTime.ToLocalTime();
+                    var endLocal = appt.EndTime.ToLocalTime();
+                    summary.AppendLine($"{startLocal:hh:mm tt} - {endLocal:hh:mm tt}: {patient?.Name ?? "Unknown"} ({appt.Reason})");
                 }
 
                 return summary.ToString();

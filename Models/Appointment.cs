@@ -43,12 +43,14 @@ namespace ClinicAppointmentManager.Models
         /// Appointment start date and time.
         /// </summary>
         [BsonElement("startTime")]
+        [BsonDateTimeOptions(Kind = DateTimeKind.Local)]
         public DateTime StartTime { get; set; }
 
         /// <summary>
         /// Appointment end date and time.
         /// </summary>
         [BsonElement("endTime")]
+        [BsonDateTimeOptions(Kind = DateTimeKind.Local)]
         public DateTime EndTime { get; set; }
 
         /// <summary>
