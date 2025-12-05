@@ -10,9 +10,8 @@ namespace ClinicAppointmentManager.Data
 {
     public class MongoDbContext
     {
-        private const string MONGO_CONNECTION_STRING = "mongodb+srv://udupishreyasbhat_db_user:qQibcWmN8vLcDNEh@cluster0.muyslgj.mongodb.net/";
-        private const string MONGO_DB_NAME = "appointmentBooking";
-
+        private string _mongoConnectionString;
+        private string _mongoDbName;
         private IMongoClient _client;
         private IMongoDatabase _database;
 
