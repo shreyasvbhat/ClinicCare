@@ -29,11 +29,57 @@ namespace ClinicAppointmentManager.UI
         private NotificationService _notificationService;
         private ReportService _reportService;
         private SampleDataSeeder _seeder;
+        private Button EditPatientButton;
+        private Button EditDoctorButton;
+        private Button EditAppointmentButton;
 
         public MainForm()
         {
             InitializeComponent();
             InitializeServices();
+            InitializeEditButtons();
+        }
+
+        private void InitializeEditButtons()
+        {
+            EditPatientButton = new Button
+            {
+                Text = "✏️ Edit",
+                Location = new System.Drawing.Point(160, 535),
+                Size = new System.Drawing.Size(130, 35),
+                BackColor = System.Drawing.Color.FromArgb(45, 125, 154),
+                ForeColor = System.Drawing.Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold)
+            };
+            EditPatientButton.Click += EditPatientButton_Click;
+            PatientsTab.Controls.Add(EditPatientButton);
+
+            EditDoctorButton = new Button
+            {
+                Text = "✏️ Edit",
+                Location = new System.Drawing.Point(160, 535),
+                Size = new System.Drawing.Size(130, 35),
+                BackColor = System.Drawing.Color.FromArgb(45, 125, 154),
+                ForeColor = System.Drawing.Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold)
+            };
+            EditDoctorButton.Click += EditDoctorButton_Click;
+            DoctorsTab.Controls.Add(EditDoctorButton);
+
+            EditAppointmentButton = new Button
+            {
+                Text = "✏️ Edit",
+                Location = new System.Drawing.Point(160, 535),
+                Size = new System.Drawing.Size(130, 35),
+                BackColor = System.Drawing.Color.FromArgb(45, 125, 154),
+                ForeColor = System.Drawing.Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold)
+            };
+            EditAppointmentButton.Click += EditAppointmentButton_Click;
+            AppointmentsTab.Controls.Add(EditAppointmentButton);
         }
 
         /// <summary>
@@ -92,7 +138,13 @@ namespace ClinicAppointmentManager.UI
 
                 foreach (var patient in _patientsList)
                 {
-                    dt.Rows.Add(patient.Name, patient.Age, patient.Gender, patient.Phone, patient.Email ?? "-");
+                    dt.Rows.Add(
+                        string.IsNullOrWhiteSpace(patient.Name) ? "-" : patient.Name,
+                        patient.Age,
+                        string.IsNullOrWhiteSpace(patient.Gender) ? "-" : patient.Gender,
+                        string.IsNullOrWhiteSpace(patient.Phone) ? "-" : patient.Phone,
+                        string.IsNullOrWhiteSpace(patient.Email) ? "-" : patient.Email
+                    );
                 }
 
                 PatientDataGridView.DataSource = dt;
@@ -131,8 +183,14 @@ namespace ClinicAppointmentManager.UI
 
                 foreach (var doctor in _doctorsList)
                 {
-                    dt.Rows.Add($"Dr. {doctor.Name}", doctor.Specialization, doctor.Phone ?? "-", 
-                        doctor.Email, $"{doctor.WorkingHoursStart}-{doctor.WorkingHoursEnd}");
+                    dt.Rows.Add(
+                        string.IsNullOrWhiteSpace(doctor.Name) ? "-" : $"Dr. {doctor.Name}",
+                        string.IsNullOrWhiteSpace(doctor.Specialization) ? "-" : doctor.Specialization,
+                        string.IsNullOrWhiteSpace(doctor.Phone) ? "-" : doctor.Phone,
+                        string.IsNullOrWhiteSpace(doctor.Email) ? "-" : doctor.Email,
+                        string.IsNullOrWhiteSpace(doctor.WorkingHoursStart) || string.IsNullOrWhiteSpace(doctor.WorkingHoursEnd)
+                            ? "-" : $"{doctor.WorkingHoursStart}-{doctor.WorkingHoursEnd}"
+                    );
                 }
 
                 DoctorDataGridView.DataSource = dt;
@@ -182,10 +240,57 @@ namespace ClinicAppointmentManager.UI
                     dt.Rows.Add(
                         startTimeLocal.ToString("dd-MMM-yyyy"),
                         $"{startTimeLocal:hh:mm tt} - {endTimeLocal:hh:mm tt}",
-                        patient?.Name ?? "Unknown",
-                        doctor != null ? $"Dr. {doctor.Name}" : "Unknown",
-                        appointment.Reason,
-                        appointment.Status
+                        string.IsNullOrWhiteSpace(patient?.Name) ? "-" : patient.Name,
+                        doctor != null && !string.IsNullOrWhiteSpace(doctor.Name) ? $"Dr. {doctor.Name}" : "-",
+                        string.IsNullOrWhiteSpace(appointment.Reason) ? "-" : appointment.Reason,
+                        appointment.Status.ToString()
+                    );
+                }
+
+                AppointmentDataGridView.DataSource = dt;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading appointments: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                LogException(ex);
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously loads and displays all appointments in a table format (awaitable version).
+        /// </summary>
+        private async Task LoadAppointmentsAsync()
+        {
+            try
+            {
+                var appointments = await _appointmentRepository.GetAllAsync();
+
+                // Create DataTable for display
+                var dt = new DataTable();
+                dt.Columns.Add("Date", typeof(string));
+                dt.Columns.Add("Time", typeof(string));
+                dt.Columns.Add("Patient", typeof(string));
+                dt.Columns.Add("Doctor", typeof(string));
+                dt.Columns.Add("Reason", typeof(string));
+                dt.Columns.Add("Status", typeof(string));
+
+                foreach (var appointment in appointments)
+                {
+                    var patient = await _patientRepository.GetByIdAsync(appointment.PatientId);
+                    var doctor = await _doctorRepository.GetByIdAsync(appointment.DoctorId);
+                    
+                    // Convert UTC to local time for display
+                    var startTimeLocal = appointment.StartTime.ToLocalTime();
+                    var endTimeLocal = appointment.EndTime.ToLocalTime();
+                    
+                    dt.Rows.Add(
+                        startTimeLocal.ToString("dd-MMM-yyyy"),
+                        $"{startTimeLocal:hh:mm tt} - {endTimeLocal:hh:mm tt}",
+                        string.IsNullOrWhiteSpace(patient?.Name) ? "-" : patient.Name,
+                        doctor != null && !string.IsNullOrWhiteSpace(doctor.Name) ? $"Dr. {doctor.Name}" : "-",
+                        string.IsNullOrWhiteSpace(appointment.Reason) ? "-" : appointment.Reason,
+                        appointment.Status.ToString()
                     );
                 }
 
@@ -782,6 +887,119 @@ namespace ClinicAppointmentManager.UI
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 LogException(ex);
             }
+        }
+
+        // Edit Patient handler
+        private async void EditPatientButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (PatientDataGridView.SelectedRows.Count == 0)
+                {
+                    MessageBox.Show("Please select a patient to edit.", "Selection Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                var selectedIndex = PatientDataGridView.SelectedRows[0].Index;
+                if (selectedIndex >= _patientsList.Count) return;
+                var patient = _patientsList[selectedIndex];
+                string newName = Prompt("Edit Name", patient.Name ?? "");
+                string newPhone = Prompt("Edit Phone", patient.Phone ?? "");
+                string newEmail = Prompt("Edit Email", patient.Email ?? "");
+                if (newName != null) patient.Name = newName;
+                if (newPhone != null) patient.Phone = newPhone;
+                if (newEmail != null) patient.Email = newEmail;
+                await _patientRepository.UpdateAsync(patient);
+                LoadPatients();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error editing patient: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                LogException(ex);
+            }
+        }
+
+        // Edit Doctor handler
+        private async void EditDoctorButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (DoctorDataGridView.SelectedRows.Count == 0)
+                {
+                    MessageBox.Show("Please select a doctor to edit.", "Selection Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                var selectedIndex = DoctorDataGridView.SelectedRows[0].Index;
+                if (selectedIndex >= _doctorsList.Count) return;
+                var doctor = _doctorsList[selectedIndex];
+                string newName = Prompt("Edit Name", doctor.Name ?? "");
+                string newPhone = Prompt("Edit Phone", doctor.Phone ?? "");
+                string newEmail = Prompt("Edit Email", doctor.Email ?? "");
+                if (newName != null) doctor.Name = newName;
+                if (newPhone != null) doctor.Phone = newPhone;
+                if (newEmail != null) doctor.Email = newEmail;
+                await _doctorRepository.UpdateAsync(doctor);
+                LoadDoctors();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error editing doctor: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                LogException(ex);
+            }
+        }
+
+        // Edit Appointment handler
+        private async void EditAppointmentButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (AppointmentDataGridView.SelectedRows.Count == 0)
+                {
+                    MessageBox.Show("Please select an appointment to edit.", "Selection Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                var selectedIndex = AppointmentDataGridView.SelectedRows[0].Index;
+                var appointments = (await _appointmentRepository.GetAllAsync()).ToList();
+                if (selectedIndex >= appointments.Count) return;
+                var appointment = appointments[selectedIndex];
+                string newReason = Prompt("Edit Reason", appointment.Reason ?? "");
+                string newStatus = Prompt("Edit Status (Scheduled/Completed/Cancelled/NoShow)", appointment.Status.ToString() ?? "");
+                if (newReason != null) appointment.Reason = newReason;
+                if (newStatus != null)
+                {
+                    if (Enum.TryParse<AppointmentStatus>(newStatus, true, out var statusEnum))
+                    {
+                        appointment.Status = statusEnum;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Invalid status. Use: Scheduled, Completed, Cancelled, or NoShow", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                }
+                await _appointmentRepository.UpdateAsync(appointment);
+                MessageBox.Show("Appointment updated successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                await LoadAppointmentsAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error editing appointment: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                LogException(ex);
+            }
+        }
+
+        // Simple prompt dialog for editing
+        private string Prompt(string title, string value)
+        {
+            var prompt = new Form() { Width = 400, Height = 150, Text = title };
+            var textBox = new TextBox() { Left = 50, Top = 20, Width = 300, Text = value };
+            var confirmation = new Button() { Text = "OK", Left = 250, Width = 100, Top = 50, DialogResult = DialogResult.OK };
+            prompt.Controls.Add(textBox);
+            prompt.Controls.Add(confirmation);
+            prompt.AcceptButton = confirmation;
+            return prompt.ShowDialog() == DialogResult.OK ? textBox.Text : null;
         }
     }
 }

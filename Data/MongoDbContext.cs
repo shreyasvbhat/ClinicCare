@@ -1,48 +1,62 @@
 using MongoDB.Driver;
 using MongoDB.Bson;
 using System;
+using System.IO;
 using ClinicAppointmentManager.Models;
 using ClinicAppointmentManager.Exceptions;
+using DotNetEnv;
 
 namespace ClinicAppointmentManager.Data
 {
     /// <summary>
     /// MongoDB context provider that manages database connections and collections.
-    /// TODO: Replace placeholders with your actual MongoDB connection details.
+    /// Reads MongoDB connection details from .env file or environment variables.
     /// </summary>
     public class MongoDbContext
     {
-        // ===== PLACEHOLDER: Configure your MongoDB connection string here =====
-        // Option 1: Local MongoDB (ensure 'mongod' is running)
-        // private const string MONGO_CONNECTION_STRING = "mongodb://localhost:27017";
-        //
-        // Option 2: MongoDB Atlas (Cloud)
-        // private const string MONGO_CONNECTION_STRING = "mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority";
-        //mongodb://localhost:27017/
-        private const string MONGO_CONNECTION_STRING = "mongodb+srv://udupishreyasbhat_db_user:qQibcWmN8vLcDNEh@cluster0.muyslgj.mongodb.net/";
-
-        // ===== PLACEHOLDER: Set your database name =====
-        private const string MONGO_DB_NAME = "appointmentBooking";
-
+        private readonly string _mongoConnectionString;
+        private readonly string _mongoDbName;
         private IMongoClient _client;
         private IMongoDatabase _database;
 
         /// <summary>
-        /// Initializes the MongoDB context with connection string and database name from placeholders.
+        /// Initializes the MongoDB context with connection string and database name from environment variables or .env file.
         /// </summary>
         public MongoDbContext()
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(MONGO_CONNECTION_STRING) ||
-                    string.IsNullOrWhiteSpace(MONGO_DB_NAME))
+                // Load .env file if it exists
+                var envPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".env");
+                if (File.Exists(envPath))
                 {
-                    throw new DatabaseException(
-                        "MongoDB configuration not set. Please configure MONGO_CONNECTION_STRING and MONGO_DB_NAME in MongoDbContext.cs");
+                    Env.Load(envPath);
+                }
+                else
+                {
+                    // Try loading from parent directories (common in development)
+                    var parentEnvPath = Path.Combine(Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)?.FullName ?? "", ".env");
+                    if (File.Exists(parentEnvPath))
+                    {
+                        Env.Load(parentEnvPath);
+                    }
                 }
 
-                _client = new MongoClient(MONGO_CONNECTION_STRING);
-                _database = _client.GetDatabase(MONGO_DB_NAME);
+                // Read from environment variables or use fallback
+                _mongoConnectionString = Environment.GetEnvironmentVariable("MONGODB_CONNECTION_STRING") 
+                    ?? throw new DatabaseException("MONGODB_CONNECTION_STRING environment variable not set. Please configure .env file or environment variable.");
+                
+                _mongoDbName = Environment.GetEnvironmentVariable("MONGODB_DATABASE_NAME") 
+                    ?? throw new DatabaseException("MONGODB_DATABASE_NAME environment variable not set. Please configure .env file or environment variable.");
+
+                if (string.IsNullOrWhiteSpace(_mongoConnectionString) || string.IsNullOrWhiteSpace(_mongoDbName))
+                {
+                    throw new DatabaseException(
+                        "MongoDB configuration not set. Please configure MONGODB_CONNECTION_STRING and MONGODB_DATABASE_NAME in .env file or environment variables.");
+                }
+
+                _client = new MongoClient(_mongoConnectionString);
+                _database = _client.GetDatabase(_mongoDbName);
 
                 // Verify connection by performing a ping
                 var admin = _database.Client.GetDatabase("admin");

@@ -1,0 +1,52 @@
+# Environment variables and sensitive data
+.env
+.env.local
+.env.*.local
+
+# Build and dependency files
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.nupkg
+*.snupkg
+*.user
+*.suo
+*.sln.docstates
+
+# IDE and editor files
+.vscode/
+.idea/
+*.vs/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+errors.log
+notifications.log
+seeding.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+.env.vault
+
+# NuGet
+.nuget/
+packages/
+*.packages.config
+
+# Build outputs
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+
+# Testing
+TestResults/
+.coverage
