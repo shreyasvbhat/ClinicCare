@@ -8,20 +8,14 @@ using DotNetEnv;
 
 namespace ClinicAppointmentManager.Data
 {
-    /// <summary>
-    /// MongoDB context provider that manages database connections and collections.
-    /// Reads MongoDB connection details from .env file or environment variables.
-    /// </summary>
     public class MongoDbContext
     {
-        private readonly string _mongoConnectionString;
-        private readonly string _mongoDbName;
+        private const string MONGO_CONNECTION_STRING = "mongodb+srv://udupishreyasbhat_db_user:qQibcWmN8vLcDNEh@cluster0.muyslgj.mongodb.net/";
+        private const string MONGO_DB_NAME = "appointmentBooking";
+
         private IMongoClient _client;
         private IMongoDatabase _database;
 
-        /// <summary>
-        /// Initializes the MongoDB context with connection string and database name from environment variables or .env file.
-        /// </summary>
         public MongoDbContext()
         {
             try
@@ -58,7 +52,6 @@ namespace ClinicAppointmentManager.Data
                 _client = new MongoClient(_mongoConnectionString);
                 _database = _client.GetDatabase(_mongoDbName);
 
-                // Verify connection by performing a ping
                 var admin = _database.Client.GetDatabase("admin");
                 var result = admin.RunCommand<BsonDocument>(new BsonDocument("ping", 1));
 
@@ -70,61 +63,28 @@ namespace ClinicAppointmentManager.Data
             }
         }
 
-        /// <summary>
-        /// Gets the MongoDB collection for patients.
-        /// </summary>
-        public IMongoCollection<Patient> Patients
-        {
-            get
-            {
-                return _database.GetCollection<Patient>("patients");
-            }
-        }
+        public IMongoCollection<Patient> Patients => _database.GetCollection<Patient>("patients");
 
-        /// <summary>
-        /// Gets the MongoDB collection for doctors.
-        /// </summary>
-        public IMongoCollection<Doctor> Doctors
-        {
-            get
-            {
-                return _database.GetCollection<Doctor>("doctors");
-            }
-        }
+        public IMongoCollection<Doctor> Doctors => _database.GetCollection<Doctor>("doctors");
 
-        /// <summary>
-        /// Gets the MongoDB collection for appointments.
-        /// </summary>
-        public IMongoCollection<Appointment> Appointments
-        {
-            get
-            {
-                return _database.GetCollection<Appointment>("appointments");
-            }
-        }
+        public IMongoCollection<Appointment> Appointments => _database.GetCollection<Appointment>("appointments");
 
-        /// <summary>
-        /// Creates necessary indexes for improved query performance.
-        /// </summary>
         public void CreateIndexes()
         {
             try
             {
-                // Create index for patient email (unique constraint)
                 var patientEmailIndexModel = new CreateIndexModel<Patient>(
                     Builders<Patient>.IndexKeys.Ascending(p => p.Email),
                     new CreateIndexOptions { Unique = true }
                 );
                 Patients.Indexes.CreateOne(patientEmailIndexModel);
 
-                // Create index for doctor license number (unique constraint)
                 var doctorLicenseIndexModel = new CreateIndexModel<Doctor>(
                     Builders<Doctor>.IndexKeys.Ascending(d => d.LicenseNumber),
                     new CreateIndexOptions { Unique = true }
                 );
                 Doctors.Indexes.CreateOne(doctorLicenseIndexModel);
 
-                // Create indexes for appointment queries
                 var appointmentDoctorDateIndexModel = new CreateIndexModel<Appointment>(
                     Builders<Appointment>.IndexKeys
                         .Ascending(a => a.DoctorId)
@@ -142,24 +102,6 @@ namespace ClinicAppointmentManager.Data
             catch (Exception ex)
             {
                 Console.WriteLine($"⚠ Warning: Could not create indexes: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Drops all collections (use only for testing/cleanup).
-        /// </summary>
-        public void DropAllCollections()
-        {
-            try
-            {
-                _database.DropCollection("patients");
-                _database.DropCollection("doctors");
-                _database.DropCollection("appointments");
-                Console.WriteLine("✓ All collections dropped.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"⚠ Warning: {ex.Message}");
             }
         }
     }
